@@ -1,0 +1,21 @@
+services:
+  paperclip:
+    image: paperclip
+    container_name: paperclip
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3100
+      - PAPERCLIP_HOME=/paperclip
+      - PAPERCLIP_DEPLOYMENT_MODE=authenticated
+      - SERVE_UI=true
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - paperclip-data:/paperclip
+
+volumes:
+  paperclip-data:
