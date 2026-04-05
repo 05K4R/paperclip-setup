@@ -18,9 +18,29 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 Download and install the **LTS** version from https://nodejs.org. Use the default settings in the installer.
 
-Close and reopen PowerShell after installing so it picks up the new `node` and `npm` commands.
+Close and reopen PowerShell after installing, then verify it works:
 
-### 4. Install Claude Code
+```powershell
+npm --version
+```
+
+If you get an error like `"npm" is not recognized`, you need to add Node.js to your PATH manually:
+
+1. Open Start-menyn and search for **"miljövariabler"**
+2. Click **"Redigera systemets miljövariabler"**
+3. Click **Miljövariabler**
+4. Under **Användarvariabler**, find `Path` and click **Redigera**
+5. Click **Ny** and add: `C:\Program Files\nodejs\`
+6. Click **OK** on all dialogs
+6. Close and reopen PowerShell, then try `npm --version` again
+
+### 4. Install Git
+
+Download and install Git from https://git-scm.com/download/win. Use the default settings in the installer.
+
+Close and reopen PowerShell after installing.
+
+### 5. Install Claude Code
 
 In PowerShell, run:
 
@@ -36,7 +56,7 @@ claude login
 
 This opens a browser window — follow the instructions to authenticate.
 
-### 5. Install and set up Paperclip
+### 6. Install and set up Paperclip
 
 In PowerShell, run:
 
@@ -46,7 +66,7 @@ npx paperclipai onboard
 
 Follow the on-screen instructions to complete the setup.
 
-### 5b. Set up with an existing company export
+### 6b. Set up with an existing company export
 
 If you have an exported company file and want to import it instead of starting fresh:
 
