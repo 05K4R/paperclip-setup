@@ -89,6 +89,16 @@ You don't need to use any special syntax or programming language. Just write in 
 
 A skill is a reusable set of instructions that tells an agent how to perform a specific type of task. Think of it like a template — instead of explaining the same process every time, you define it once as a skill and the agent can use it repeatedly. For example, a skill could describe how to write a blog post in your company's tone of voice, or how to review a document following a specific checklist.
 
+To create a skill, you can simply ask Paperclip to make one for you. For example:
+
+> "Create a skill called 'Spotify Weekly Releases' that searches for the latest new album and single releases on Spotify this week, summarizes them in a short list with artist name, title, and release date, and writes the summary in Swedish."
+
+Once the skill exists, you can run it any time with a short prompt like:
+
+> "Run the Spotify Weekly Releases skill for this week."
+
+This way you don't have to re-explain the task every time — the skill remembers how to do it.
+
 ### Prompts vs instructions
 
 - **Prompt:** What you type when you give an agent a task. This is the specific thing you want done right now.
@@ -97,3 +107,14 @@ A skill is a reusable set of instructions that tells an agent how to perform a s
 ### Tokens and context
 
 Agents read and generate text in units called **tokens** (roughly one token per word). Each agent has a **context window** — a limit on how much text it can process at once. If a task involves very long documents, the agent may need to work through them in parts.
+
+### Language — Swedish or English?
+
+AI agents understand both Swedish and English well. You can write your prompts and instructions in whichever language you prefer — the agent will respond in the same language.
+
+However, a few tips:
+
+- **Write prompts in the language you want the output in.** If you want a Swedish result, write your prompt in Swedish. If you write in English, the agent will typically respond in English.
+- **Instructions and skills** should also be written in the language you want the agent to use. If your company's output should be in Swedish, write your skills and company instructions in Swedish.
+- **Be explicit when needed.** If you mix languages or want to be sure, you can always add "Svara på svenska" or "Skriv resultatet på svenska" to your prompt.
+- **Technical terms** can be kept in English if that feels more natural (e.g. "release", "playlist"). The agent handles mixed language fine.
