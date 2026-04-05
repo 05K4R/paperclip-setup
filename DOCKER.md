@@ -152,3 +152,24 @@ Add `BETTER_AUTH_SECRET` to your `.env` file:
 ```bash
 echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" > .env
 ```
+
+### EACCES: permission denied on `/paperclip/instances/default/.env`
+
+This happens when files in the data volume are owned by `root` instead of the `node` user (UID 1000). Common cause: running `docker exec` without `-u node`, which defaults to root and creates files with root ownership.
+
+If the container is crash-looping and you can't exec into it, stop it and fix permissions via a temporary container:
+
+```bash
+docker compose down
+docker run --rm -v paperclip-docker-setup_paperclip-data:/paperclip alpine chown -R 1000:1000 /paperclip
+docker compose up -d
+```
+
+### Claude Code not recognized by Paperclip
+
+`docker exec` runs as `root` by default, but Paperclip runs as the `node` user. Credentials stored by root are invisible to the Paperclip process. Always exec as `node`:
+
+```bash
+docker exec -it -u node paperclip claude login
+docker compose restart
+```
