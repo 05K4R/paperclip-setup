@@ -127,10 +127,21 @@ Pull the latest source and rebuild:
 ```bash
 cd paperclip && git pull && cd ..
 docker build -t paperclip ./paperclip
+docker compose down
 docker compose up -d
 ```
 
 ## Troubleshooting
+
+### Build fails with sha256sum check on GitHub CLI keyring
+
+If the build fails with a `sha256sum` mismatch on `githubcli-archive-keyring.gpg`, GitHub has rotated their GPG signing key (they do this periodically). Remove the checksum verification line from `paperclip/Dockerfile`:
+
+```diff
+-  && echo "20e0125d..." | sha256sum -c - \
+```
+
+The GPG-signed apt repository still validates packages cryptographically, so this is safe to remove.
 
 ### Build fails with "JavaScript heap out of memory"
 
