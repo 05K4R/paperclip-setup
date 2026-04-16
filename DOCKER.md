@@ -12,17 +12,36 @@ Install Colima (lightweight Docker runtime for macOS):
 brew install colima docker docker-compose
 ```
 
-Start Colima with enough memory for the build (Vite UI build needs ~6 GB):
+Start Colima with enough memory for the build (Vite UI build needs ~6 GB). The `vz`/`virtiofs` options give the best performance for bind mounts on Apple Silicon:
 
 ```bash
-colima start --cpu 2 --memory 6
+colima start --cpu 2 --memory 6 --vm-type vz --mount-type virtiofs
+```
+
+Then add 2 GB of swap memory to the VM. Open the Colima config:
+
+```bash
+colima template
+```
+
+Find the `swap` field and set it to `2`:
+
+```yaml
+swap: 2
+```
+
+Save and restart Colima for the change to take effect:
+
+```bash
+colima stop
+colima start
 ```
 
 If Colima is already running with less memory, restart it:
 
 ```bash
 colima stop
-colima start --cpu 2 --memory 6
+colima start --cpu 2 --memory 6 --vm-type vz --mount-type virtiofs
 ```
 
 ## 2. Clone the Paperclip source
@@ -146,7 +165,7 @@ Increase your Colima VM memory:
 
 ```bash
 colima stop
-colima start --cpu 2 --memory 6
+colima start --cpu 2 --memory 6 --vm-type vz --mount-type virtiofs
 ```
 
 ### "local_trusted mode requires loopback host binding"
