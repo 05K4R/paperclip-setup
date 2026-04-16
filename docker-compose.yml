@@ -15,7 +15,4 @@ services:
       # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       # - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
-      - paperclip-data:/paperclip
-
-volumes:
-  paperclip-data:
+      - ./paperclip-data:/paperclip

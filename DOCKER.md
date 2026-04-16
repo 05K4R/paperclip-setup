@@ -92,32 +92,29 @@ The `docker-compose.yml` is set up with:
 |---------|-------|-------|
 | Port | 3100 | Same as default Paperclip |
 | Deployment mode | `authenticated` | Required in Docker (`local_trusted` only allows loopback binding, but containers need `0.0.0.0`) |
-| Data volume | `paperclip-data` (named volume) | Persists DB, attachments, encryption keys, agent workspaces |
+| Data volume | `./paperclip-data` (bind mount) | Persists DB, attachments, encryption keys, agent workspaces |
 | Restart policy | `unless-stopped` | Auto-restarts on crash or host reboot |
 
 ## Data persistence
 
-All persistent data is stored in a named Docker volume (`paperclip-data`) mounted at `/paperclip` inside the container.
+All persistent data is stored in `./paperclip-data` on the host, bind-mounted to `/paperclip` inside the container.
 
-- The container cannot access the host filesystem. It can only see its own image layers and the `/paperclip` mount point.
-- The volume persists independently of the container. `docker compose down` removes the container but keeps the volume. Only `docker volume rm paperclip-docker-setup_paperclip-data` deletes it.
-- On macOS, the volume lives inside the Colima VM and is not directly browsable from Finder.
+- Data lives directly on your Mac filesystem, so it survives Colima restarts, deletions, or reinstalls.
+- The directory is browsable in Finder and can be backed up with normal file tools (Time Machine, rsync, etc.).
+- `docker compose down` removes the container but the data directory remains untouched.
 
 ### Backup
 
-Copy data out of the container:
+Since data is on the host, you can copy or archive it directly:
 
 ```bash
-docker cp paperclip:/paperclip ./backup
+cp -a ./paperclip-data ./paperclip-data-backup
 ```
 
 Or create a tarball:
 
 ```bash
-docker run --rm \
-  -v paperclip-docker-setup_paperclip-data:/data \
-  -v "$(pwd)":/backup \
-  alpine tar czf /backup/paperclip-backup.tar.gz -C /data .
+tar czf paperclip-backup.tar.gz -C ./paperclip-data .
 ```
 
 ## Updating
@@ -168,11 +165,11 @@ echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" > .env
 
 This happens when files in the data volume are owned by `root` instead of the `node` user (UID 1000). Common cause: running `docker exec` without `-u node`, which defaults to root and creates files with root ownership.
 
-If the container is crash-looping and you can't exec into it, stop it and fix permissions via a temporary container:
+If the container is crash-looping and you can't exec into it, stop it and fix permissions:
 
 ```bash
 docker compose down
-docker run --rm -v paperclip-docker-setup_paperclip-data:/paperclip alpine chown -R 1000:1000 /paperclip
+docker run --rm -v "$(pwd)/paperclip-data":/paperclip alpine chown -R 1000:1000 /paperclip
 docker compose up -d
 ```
 
