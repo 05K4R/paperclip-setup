@@ -138,14 +138,27 @@ tar czf paperclip-backup.tar.gz -C ./paperclip-data .
 
 ## Updating
 
-Pull the latest source and rebuild:
+Paperclip publishes stable releases as tags (`vYYYY.MDD.N`). Release tags may
+not be on `master`, so fetch tags explicitly:
 
 ```bash
-cd paperclip && git pull && cd ..
+cd paperclip
+git fetch --tags origin
+git tag -l 'v*' --sort=-v:refname | grep -v -- '-' | head -5   # list latest stable releases
+git checkout v2026.916.1                                       # or whichever release you want
+cd ..
 docker build -t paperclip ./paperclip
 docker compose down
 docker compose up -d
 ```
+
+`git pull` doesn't work on a detached release checkout. Always use
+`git fetch --tags` + `git checkout <tag>` instead. The latest release is also
+listed at https://github.com/paperclipai/paperclip/releases/latest.
+
+Back up `./paperclip-data` before updating (see [Backup](#backup)). Avoid moving
+to an *older* version than you last ran: newer builds may have applied database
+migrations that older releases don't understand.
 
 ## Troubleshooting
 
