@@ -237,20 +237,26 @@ above has no effect on this setup.
 
 ### Agents fail with "ACP agent reported a terminal request failure" (`acpx_turn_failed`)
 
-The Claude ACP adapter runs the Claude Code binary bundled with its pinned
-`claude-agent-sdk`, which can be too old for the configured model. The real
-error is in the session transcript under
-`./paperclip-data/.claude/projects/*/<session-id>.jsonl`, e.g.
-`Claude Code 2.1.263 does not support this model; version 2.1.280 or newer is required`.
+The real error is in the Claude session transcript under
+`./paperclip-data/.claude/projects/*/<session-id>.jsonl`. A common one is:
 
-The provided `docker-compose.yml` sets
-`CLAUDE_CODE_EXECUTABLE=/usr/local/bin/claude` so the adapter uses the image's
-global CLI instead. That CLI layer is cached by Docker, so it is only
-reinstalled when the `CLI_TOOLS_CACHE_EPOCH` build arg changes. `./update.sh`
-passes today's date for you. If this error comes back, rerun `./update.sh` with
-your current tag, or rebuild manually:
+```
+API Error: 400 Claude Code 2.1.263 does not support this model; version 2.1.280 or newer is required.
+```
+
+Paperclip's Claude ACP adapter doesn't use the `claude` CLI installed in the
+image. It runs the Claude Code binary bundled with a pinned, checksum-verified
+`@anthropic-ai/claude-agent-sdk` version (see the
+`claude-agent-acp@...>@anthropic-ai/claude-agent-sdk` override in
+`paperclip/pnpm-workspace.yaml`). Setting `CLAUDE_CODE_EXECUTABLE` has no
+effect, because Paperclip overrides it. If that pinned version is too old for
+the model your agents use, move to a Paperclip version with a newer pin:
 
 ```bash
-docker build --build-arg CLI_TOOLS_CACHE_EPOCH="$(date +%Y%m%d)" -t paperclip ./paperclip
-docker compose up -d
+grep claude-agent-sdk paperclip/pnpm-workspace.yaml   # pin in the current checkout
+git -C paperclip show origin/master:pnpm-workspace.yaml | grep claude-agent-sdk
 ```
+
+Note that release tags live on release branches, so a release can carry an
+*older* pin than a `master` build from a few days earlier. `./update.sh` warns
+when the chosen tag is older than your current checkout.

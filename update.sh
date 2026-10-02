@@ -14,7 +14,8 @@ fi
 echo "==> Fetching release tags"
 git -C paperclip fetch --tags --force origin
 
-current=$(git -C paperclip describe --tags --exact-match --match 'v*' HEAD 2>/dev/null || echo "unknown")
+current=$(git -C paperclip describe --tags --exact-match --match 'v*' HEAD 2>/dev/null \
+  || git -C paperclip log -1 --format='commit %h (%cs)' HEAD)
 echo
 echo "Current version: $current"
 echo "Latest stable releases:"
@@ -32,14 +33,23 @@ if ! git -C paperclip rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
   exit 1
 fi
 
-if [ "$current" != "unknown" ] && [ "$current" != "$tag" ]; then
-  older=$(printf '%s\n%s\n' "$current" "$tag" | sort -V | head -1)
-  if [ "$older" = "$tag" ]; then
-    echo "WARNING: $tag is older than $current. Newer versions may have applied"
-    echo "database migrations that older releases don't understand."
-    read -r -p "Downgrade anyway? [y/N] " ans
-    [[ "$ans" =~ ^[Yy]$ ]] || exit 1
+# Release tags live on release branches, so a newer-looking tag can still be
+# older than what is checked out (e.g. coming from master). Treat the tag as a
+# downgrade if it is an ancestor of the current checkout, or if it sorts lower.
+downgrade=false
+if [ "$(git -C paperclip rev-parse HEAD)" != "$(git -C paperclip rev-parse "$tag^{commit}")" ]; then
+  if git -C paperclip merge-base --is-ancestor "$tag" HEAD; then
+    downgrade=true
+  elif [[ "$current" == v* ]] && [ "$(printf '%s\n%s\n' "$current" "$tag" | sort -V | head -1)" = "$tag" ]; then
+    downgrade=true
   fi
+fi
+if $downgrade; then
+  echo "WARNING: $tag is older than the current checkout ($current). Newer"
+  echo "versions may have applied database migrations or pinned newer agent"
+  echo "runtimes that $tag doesn't have."
+  read -r -p "Downgrade anyway? [y/N] " ans
+  [[ "$ans" =~ ^[Yy]$ ]] || exit 1
 fi
 
 read -r -p "Back up ./paperclip-data first? (can take a while) [y/N] " ans

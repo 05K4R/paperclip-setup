@@ -17,9 +17,6 @@ services:
       - PAPERCLIP_DEPLOYMENT_MODE=authenticated
       - SERVE_UI=true
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      # Make the ACP adapter use the image's global Claude Code CLI instead of
-      # the (often older) copy bundled with its pinned claude-agent-sdk.
-      - CLAUDE_CODE_EXECUTABLE=/usr/local/bin/claude
       # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       # - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
