@@ -138,8 +138,17 @@ tar czf paperclip-backup.tar.gz -C ./paperclip-data .
 
 ## Updating
 
-Paperclip publishes stable releases as tags (`vYYYY.MDD.N`). Release tags may
-not be on `master`, so fetch tags explicitly:
+The easiest way is the update script, which lists the latest stable releases,
+asks which tag to install, optionally backs up `./paperclip-data`, then checks
+out, builds and restarts:
+
+```bash
+./update.sh            # prompts for the version tag
+./update.sh v2026.1001.0
+```
+
+To do it manually: Paperclip publishes stable releases as tags (`vYYYY.MDD.N`).
+Release tags may not be on `master`, so fetch tags explicitly:
 
 ```bash
 cd paperclip
@@ -147,7 +156,7 @@ git fetch --tags origin
 git tag -l 'v*' --sort=-v:refname | grep -v -- '-' | head -5   # list latest stable releases
 git checkout v2026.916.1                                       # or whichever release you want
 cd ..
-docker build -t paperclip ./paperclip
+docker build --build-arg CLI_TOOLS_CACHE_EPOCH="$(date +%Y%m%d)" -t paperclip ./paperclip
 docker compose down
 docker compose up -d
 ```
@@ -212,4 +221,36 @@ docker compose up -d
 ```bash
 docker exec -it -u node paperclip claude login
 docker compose restart
+```
+
+### Container starts but the server never comes up (logs stay empty)
+
+The image's entrypoint runs `chown -R node:node /paperclip` whenever it finds a
+file not owned by `node`. On Colima's virtiofs bind mount every file appears
+root-owned and `chown` silently does nothing, so this walks the entire data
+directory on every start and never finishes (`docker top paperclip` shows the
+`chown` process). The provided `docker-compose.yml` avoids this by running the
+container as `user: "1000:1000"`, which makes the entrypoint skip the chown.
+
+Because of the same virtiofs behaviour, the `chown` fix in the EACCES section
+above has no effect on this setup.
+
+### Agents fail with "ACP agent reported a terminal request failure" (`acpx_turn_failed`)
+
+The Claude ACP adapter runs the Claude Code binary bundled with its pinned
+`claude-agent-sdk`, which can be too old for the configured model. The real
+error is in the session transcript under
+`./paperclip-data/.claude/projects/*/<session-id>.jsonl`, e.g.
+`Claude Code 2.1.263 does not support this model; version 2.1.280 or newer is required`.
+
+The provided `docker-compose.yml` sets
+`CLAUDE_CODE_EXECUTABLE=/usr/local/bin/claude` so the adapter uses the image's
+global CLI instead. That CLI layer is cached by Docker, so it is only
+reinstalled when the `CLI_TOOLS_CACHE_EPOCH` build arg changes. `./update.sh`
+passes today's date for you. If this error comes back, rerun `./update.sh` with
+your current tag, or rebuild manually:
+
+```bash
+docker build --build-arg CLI_TOOLS_CACHE_EPOCH="$(date +%Y%m%d)" -t paperclip ./paperclip
+docker compose up -d
 ```

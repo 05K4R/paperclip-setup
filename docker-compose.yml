@@ -3,6 +3,11 @@ services:
     image: paperclip
     container_name: paperclip
     restart: unless-stopped
+    # Run as node (UID 1000) directly so the entrypoint skips its recursive
+    # chown of /paperclip. On Colima virtiofs bind mounts every file appears
+    # root-owned and chown is a silent no-op, so that chown re-walks the whole
+    # data dir on every start and the server never boots.
+    user: "1000:1000"
     ports:
       - "3100:3100"
     environment:
@@ -12,6 +17,9 @@ services:
       - PAPERCLIP_DEPLOYMENT_MODE=authenticated
       - SERVE_UI=true
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      # Make the ACP adapter use the image's global Claude Code CLI instead of
+      # the (often older) copy bundled with its pinned claude-agent-sdk.
+      - CLAUDE_CODE_EXECUTABLE=/usr/local/bin/claude
       # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       # - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
